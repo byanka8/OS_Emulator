@@ -1,10 +1,9 @@
 #include "utils.h"
 #include <thread>
 #include <chrono>
-
-std::mutex coreAssignMutex; // Needed for FCFS core assignment
-std::map<std::string, int> processToCore; // For FCFS + legacy RR
-int nextCoreId = 0; // Shared core round-robin index (for FCFS)
+#include <fstream>
+#include <unordered_set>
+#include <set>
 
 Scheduler::Scheduler(int cores,
     std::map<std::string, ProcessScreen>& running,
@@ -16,16 +15,16 @@ Scheduler::Scheduler(int cores,
 void Scheduler::addProcess(const ProcessScreen& process) {
     std::lock_guard<std::mutex> lock(queueMutex);
     readyQueue.push(process);
-    queueCV.notify_one();
+    queueCV.notify_all();
 }
 
 void Scheduler::runSchedulerFCFS() {
     std::vector<std::thread> threads;
     for (int i = 0; i < numCores; ++i) {
-        threads.emplace_back(&Scheduler::coreWorkerFCFS, this, i);
+        threads.emplace_back(&Scheduler::sharedWorkerFCFS, this, i);
     }
     for (auto& t : threads) {
-        t.join();
+        t.detach();
     }
 }
 
@@ -39,22 +38,28 @@ void Scheduler::runSchedulerRR(int quantum) {
     }
 }
 
-void Scheduler::coreWorkerFCFS(int coreId) {
+void Scheduler::sharedWorkerFCFS(int coreId) {
     while (true) {
         ProcessScreen current;
-        {
-            std::unique_lock<std::mutex> lock(queueMutex);
-            if (readyQueue.empty()) return;
-            current = readyQueue.front();
-            readyQueue.pop();
-        }
+        bool found = false;
 
         {
-            std::lock_guard<std::mutex> lock(coreAssignMutex);
-            current.coreAssigned = nextCoreId;
-            nextCoreId = (nextCoreId + 1) % numCores;
+            std::lock_guard<std::mutex> lock(queueMutex);
+            if (!readyQueue.empty()) {
+                current = readyQueue.front();
+                readyQueue.pop();
+                found = true;
+            }
         }
+
+        if (!found) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
+        }
+
+        current.coreAssigned = coreId;
         current.startTime = getCurrentTimestamp();
+        current.timestamp = current.startTime;
 
         {
             std::lock_guard<std::mutex> lock(processMutex);
@@ -63,18 +68,28 @@ void Scheduler::coreWorkerFCFS(int coreId) {
 
         while (!current.hasFinished()) {
             current.executeInstruction();
+            current.timestamp = getCurrentTimestamp();
+
+            {
+                std::ofstream out(current.name + ".txt", std::ios::app);
+                out << "(" << current.timestamp << ") Core:" << coreId
+                    << " \"Hello world from " << current.name << "! [Line: "
+                    << current.currentInstructions << "]\"\n";
+            }
+
             {
                 std::lock_guard<std::mutex> lock(processMutex);
                 runningProcesses[current.name] = current;
             }
+
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
 
-        current.endTime = getCurrentTimestamp();
         {
             std::lock_guard<std::mutex> lock(processMutex);
-            runningProcesses.erase(current.name);
+            current.endTime = getCurrentTimestamp();
             finishedProcesses[current.name] = current;
+            runningProcesses.erase(current.name);
         }
     }
 }
@@ -84,47 +99,52 @@ void Scheduler::coreWorkerRR(int coreId, int quantum) {
         ProcessScreen current;
         {
             std::unique_lock<std::mutex> lock(queueMutex);
-
             if (readyQueue.empty()) return;
-
-            // Only the thread whose turn it is will take the next process
-            if (coreId != rrIndex % numCores) {
-                continue;
-            }
-
             current = readyQueue.front();
             readyQueue.pop();
-            rrIndex++;  // Advance RR index after popping
         }
-
-        current.coreAssigned = coreId;
 
         {
             std::lock_guard<std::mutex> lock(processMutex);
-            if (current.startTime.empty()) {
-                current.startTime = getCurrentTimestamp();
+            if (runningProcesses.find(current.name) != runningProcesses.end()) {
+                current = runningProcesses[current.name];
             }
-            runningProcesses[current.name] = current;
+            else {
+                current.startTime = getCurrentTimestamp();
+                runningProcesses[current.name] = current;
+            }
         }
 
         int instructionsRun = 0;
         while (!current.hasFinished() && instructionsRun < quantum) {
+            current.coreAssigned = coreId;
             current.executeInstruction();
+            current.timestamp = getCurrentTimestamp();
+
+            {
+                std::ofstream out(current.name + ".txt", std::ios::app);
+                out << "(" << current.timestamp << ") Core:" << coreId
+                    << " \"Hello world from " << current.name << "! [Line: "
+                    << current.currentInstructions << "]\"\n";
+            }
+
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             ++instructionsRun;
-        }
 
-        {
-            std::lock_guard<std::mutex> lock(processMutex);
-            runningProcesses.erase(current.name);
+            {
+                std::lock_guard<std::mutex> lock(processMutex);
+                runningProcesses[current.name] = current;
+            }
         }
 
         if (!current.hasFinished()) {
             std::lock_guard<std::mutex> lock(queueMutex);
-            readyQueue.push(current); // rotate back into queue
-        } else {
+            readyQueue.push(current);
+        }
+        else {
             current.endTime = getCurrentTimestamp();
             std::lock_guard<std::mutex> lock(processMutex);
+            runningProcesses.erase(current.name);
             finishedProcesses[current.name] = current;
         }
     }
