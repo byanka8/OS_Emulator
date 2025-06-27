@@ -48,6 +48,16 @@ void handleCommand(bool initialized) {
         }
         else if (strcmp(command, "report-util") == 0) {
             printf("report-util command recognized. Doing something.\n");
+            std::string report = getProcessReport();
+
+            if (report.empty()) {
+                // fallback if report was never captured
+                report = getCPUUtilization() + getProcessStatus(runningProcesses, finishedProcesses, processScreens, processMutex);
+                saveToFile(report);
+            }
+            else {
+                saveToFile(report);
+            }
         }
         else if (strcmp(command, "clear") == 0) {
             printf("clear command recognized. Reprinting screen...\n");
@@ -70,6 +80,7 @@ int main() {
     std::srand(static_cast<unsigned>(std::time(0)));
     
     char command[100];
+    //char prevCommand[100];
     bool initialized = false;
 
     startUp();
@@ -90,6 +101,8 @@ int main() {
             std::cout << "Min Ins: " << minIns << "\n";
             std::cout << "Max Ins: " << maxIns << "\n";
             std::cout << "Delay: " << delay << "\n";
+
+            initializeCoreTracking(numCpu); // Init core usage tracking
 
             printf("INITIALIZE command recognized. Initializing System.\n");
         }
@@ -190,6 +203,17 @@ int main() {
         }
         else if (strcmp(command, "report-util") == 0) {
             printf("report-util command recognized. Doing something.\n");
+
+            std::string report = getProcessReport();
+
+            if (report.empty()) {
+                // fallback if report was never captured
+                report = getCPUUtilization() + getProcessStatus(runningProcesses, finishedProcesses, processScreens, processMutex);
+                saveToFile(report);
+            }
+            else {
+                saveToFile(report);
+            } 
         }
         else if (strcmp(command, "clear") == 0) {
             printf("clear command recognized. Reprinting screen...\n");

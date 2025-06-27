@@ -18,7 +18,7 @@ void initializeCoreTracking(int numCores);
 void setCoreActive(int coreId, bool active);
 
 // Print CPU utilization report to stdout
-void reportCPUUtilization();
+std::string getCPUUtilization();
 
 //Struct for the Process to show up will probably add more later on to show completion of instructions
 struct ProcessScreen {
@@ -84,6 +84,9 @@ private:
 
 // Other utils
 std::string getCurrentTimestamp();
+void setProcessReport(const std::string& processReport);
+std::string getProcessReport();
+void saveToFile(const std::string& content);
 void readConfig(const std::string& filename,
     int& numCpu,
     std::string& scheduler,
@@ -120,9 +123,10 @@ void handleScreenCommand(const char* input, std::map<std::string, ProcessScreen>
 
 void drawProcessScreen(const ProcessScreen& ps);
 void processScreenLoop(const std::string& name);
-void printProcessStatus(
+std::string getProcessStatus(
     const std::map<std::string, ProcessScreen>& runningProcesses,
     const std::map<std::string, ProcessScreen>& finishedProcesses,
+    const std::map<std::string, ProcessScreen>& processScreens,
     std::mutex& processMutex
 );
 ProcessScreen createProcess(std::string name, int id, int totalInstructions);

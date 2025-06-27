@@ -1,0 +1,9 @@
+CPU Utilization: 0%
+Cores used: 0
+Cores available: 5
+
+Created processes:
+hello (06/28/2025, 02:53:28 AM)  [ 0 / 100 ]
+saja (06/28/2025, 02:53:36 AM)  [ 0 / 100 ]
+-------------------------------
+

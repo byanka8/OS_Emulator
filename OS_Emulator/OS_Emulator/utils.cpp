@@ -21,6 +21,24 @@ std::string getCurrentTimestamp() {
     return std::string(buf);
 }
 
+static std::string processReport;
+
+void setProcessReport(const std::string& report) {
+    processReport = report;
+}
+
+std::string getProcessReport() {
+    return processReport;
+}
+
+void saveToFile(const std::string& content) {
+    std::ofstream outFile("csopesy-log.txt");
+    if (outFile.is_open()) {
+        outFile << content << "\n";
+        outFile.close();
+    }
+}
+
 void readConfig(const std::string& filename,
     int& numCpu,
     std::string& scheduler,

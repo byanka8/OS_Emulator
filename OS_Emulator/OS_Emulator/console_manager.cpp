@@ -3,6 +3,7 @@
 #include "utils.h"
 #include <mutex>
 #include <map>
+#include <sstream>
 
 
 void printMenuTopBorder() {
@@ -326,39 +327,60 @@ void clearScreen() {
 #endif
 }
 
-void printProcessStatus(
+std::string getProcessStatus(
     const std::map<std::string, ProcessScreen>& runningProcesses,
     const std::map<std::string, ProcessScreen>& finishedProcesses,
+    const std::map<std::string, ProcessScreen>& processScreens,
     std::mutex& processMutex
 ) {
     /*std::lock_guard<std::mutex> lock(processMutex);*/
 
-    std::cout << "-------------------------------\n";
-    std::cout << "Running processes:\n";
+    std::ostringstream oss;
+    if (runningProcesses.size() > 0 || finishedProcesses.size() > 0) {
+        oss << "-------------------------------\n";
+        oss << "Running processes:\n";
 
-    for (const auto& pair : runningProcesses) {
-        const std::string& processName = pair.first;
-        const ProcessScreen& proc = pair.second;
-        std::cout << processName
-            << " (" << proc.startTime << ")"
-            << "  Core: " << proc.coreAssigned
-            << "  [ " << proc.currentInstructions << " / " << proc.totalInstructions << " ]"
-            << std::endl;
+        for (const auto& pair : runningProcesses) {
+            const std::string& processName = pair.first;
+            const ProcessScreen& proc = pair.second;
+            oss << processName
+                << " (" << proc.startTime << ")"
+                << "  Core: " << proc.coreAssigned
+                << "  [ " << proc.currentInstructions << " / " << proc.totalInstructions << " ]"
+                << std::endl;
+        }
+
+        oss << "\nFinished processes:\n";
+
+        for (const auto& pair : finishedProcesses) {
+            const std::string& processName = pair.first;
+            const ProcessScreen& proc = pair.second;
+            oss << processName
+                << " (" << proc.endTime << ")"
+                << "  Finished  "
+                << "  [ " << proc.currentInstructions << " / " << proc.totalInstructions << " ]"
+                << std::endl;
+        }
+
+        oss << "-------------------------------\n";
     }
+    else {
+        oss << "\nCreated processes:\n";
 
-    std::cout << "\nFinished processes:\n";
+        for (const auto& pair : processScreens) {
+            const std::string& processName = pair.first;
+            const ProcessScreen& proc = pair.second;
+            oss << processName
+                << " (" << proc.timestamp << ")"
+                << "  [ " << proc.currentInstructions << " / " << proc.totalInstructions << " ]"
+                << std::endl;
+        }
 
-    for (const auto& pair : finishedProcesses) {
-        const std::string& processName = pair.first;
-        const ProcessScreen& proc = pair.second;
-        std::cout << processName
-            << " (" << proc.endTime << ")"
-            << "  Finished  "
-            << "  [ " << proc.currentInstructions << " / " << proc.totalInstructions << " ]"
-            << std::endl;
+        oss << "-------------------------------\n";
     }
+    
 
-    std::cout << "-------------------------------\n";
+    return oss.str();
 }
 
 void handleScreenCommand(const char* input, std::map<std::string, ProcessScreen> &processScreens, int maxIns, std::map<std::string, ProcessScreen>& runningProcesses,
@@ -401,10 +423,14 @@ void handleScreenCommand(const char* input, std::map<std::string, ProcessScreen>
             //printf("CPU Utilization: 100%\n");  // This will be moved to cpu_manager
             //printf("Cores used: 4\n");
             //printf("Cores available: 0\n");
+            //std::ostringstream oss; //originally ossCPU
+            //std::ostringstream ossProcess;
 
-            reportCPUUtilization();
+            std::string processReport = getCPUUtilization() + getProcessStatus(runningProcesses, finishedProcesses, processScreens, processMutex);
 
-            printProcessStatus(runningProcesses, finishedProcesses, processMutex);
+            setProcessReport(processReport);
+
+            std::cout << processReport;
         }
     }
     else {

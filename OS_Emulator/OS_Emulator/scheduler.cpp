@@ -1,6 +1,7 @@
 #include "utils.h"
 #include <thread>
 #include <chrono>
+#include <sstream>
 
 std::mutex coreAssignMutex;
 std::map<std::string, int> processToCore;
@@ -11,8 +12,7 @@ Scheduler::Scheduler(int cores,
     std::map<std::string, ProcessScreen>& finished,
     std::mutex& pm)
     : numCores(cores), runningProcesses(running), finishedProcesses(finished), processMutex(pm) {
-    initializeCoreTracking(numCores); // Init core usage tracking
-}
+};
 
 void Scheduler::addProcess(const ProcessScreen& process) {
     std::lock_guard<std::mutex> lock(queueMutex);
@@ -160,7 +160,26 @@ void setCoreActive(int coreId, bool active) {
     }
 }
 
-void reportCPUUtilization() {
+
+// original
+//void reportCPUUtilization() {
+//    int used = 0;
+//    for (bool active : coreActiveGlobal) {
+//        if (active) ++used;
+//    }
+//
+//    int total = static_cast<int>(coreActiveGlobal.size());
+//    int percent = total == 0 ? 0 : (used * 100) / total;
+//    int available = total - used;
+//
+//    std::cout << "CPU Utilization: " << percent << "%" << std::endl;
+//    std::cout << "Cores used: " << used << std::endl;
+//    std::cout << "Cores available: " << available << std::endl;
+//}
+
+std::string getCPUUtilization() {
+    std::ostringstream oss;
+
     int used = 0;
     for (bool active : coreActiveGlobal) {
         if (active) ++used;
@@ -170,7 +189,9 @@ void reportCPUUtilization() {
     int percent = total == 0 ? 0 : (used * 100) / total;
     int available = total - used;
 
-    std::cout << "CPU Utilization: " << percent << "%" << std::endl;
-    std::cout << "Cores used: " << used << std::endl;
-    std::cout << "Cores available: " << available << std::endl;
+    oss << "CPU Utilization: " << percent << "%" << std::endl;
+    oss << "Cores used: " << used << std::endl;
+    oss << "Cores available: " << available << std::endl;
+
+    return oss.str();
 }
