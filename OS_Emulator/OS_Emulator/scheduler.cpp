@@ -2,15 +2,16 @@
 #include <thread>
 #include <chrono>
 
-std::mutex coreAssignMutex; // Needed for FCFS core assignment
-std::map<std::string, int> processToCore; // For FCFS + legacy RR
-int nextCoreId = 0; // Shared core round-robin index (for FCFS)
+std::mutex coreAssignMutex;
+std::map<std::string, int> processToCore;
+int nextCoreId = 0;
 
 Scheduler::Scheduler(int cores,
     std::map<std::string, ProcessScreen>& running,
     std::map<std::string, ProcessScreen>& finished,
     std::mutex& pm)
     : numCores(cores), runningProcesses(running), finishedProcesses(finished), processMutex(pm) {
+    initializeCoreTracking(numCores); // Init core usage tracking
 }
 
 void Scheduler::addProcess(const ProcessScreen& process) {
@@ -40,6 +41,9 @@ void Scheduler::runSchedulerRR(int quantum) {
 }
 
 void Scheduler::coreWorkerFCFS(int coreId) {
+
+    setCoreActive(coreId, true);
+
     while (true) {
         ProcessScreen current;
         {
@@ -54,6 +58,8 @@ void Scheduler::coreWorkerFCFS(int coreId) {
             current.coreAssigned = nextCoreId;
             nextCoreId = (nextCoreId + 1) % numCores;
         }
+
+        coreActiveGlobal[coreId] = true;
         current.startTime = getCurrentTimestamp();
 
         {
@@ -71,33 +77,40 @@ void Scheduler::coreWorkerFCFS(int coreId) {
         }
 
         current.endTime = getCurrentTimestamp();
+
         {
             std::lock_guard<std::mutex> lock(processMutex);
             runningProcesses.erase(current.name);
             finishedProcesses[current.name] = current;
         }
+
+        coreActiveGlobal[coreId] = false;
     }
+
+    setCoreActive(coreId, false);
 }
 
 void Scheduler::coreWorkerRR(int coreId, int quantum) {
+
+    setCoreActive(coreId, true);
+
     while (true) {
         ProcessScreen current;
         {
             std::unique_lock<std::mutex> lock(queueMutex);
-
             if (readyQueue.empty()) return;
 
-            // Only the thread whose turn it is will take the next process
             if (coreId != rrIndex % numCores) {
                 continue;
             }
 
             current = readyQueue.front();
             readyQueue.pop();
-            rrIndex++;  // Advance RR index after popping
+            rrIndex++;
         }
 
         current.coreAssigned = coreId;
+        coreActiveGlobal[coreId] = true;
 
         {
             std::lock_guard<std::mutex> lock(processMutex);
@@ -121,11 +134,43 @@ void Scheduler::coreWorkerRR(int coreId, int quantum) {
 
         if (!current.hasFinished()) {
             std::lock_guard<std::mutex> lock(queueMutex);
-            readyQueue.push(current); // rotate back into queue
-        } else {
+            readyQueue.push(current);
+        }
+        else {
             current.endTime = getCurrentTimestamp();
             std::lock_guard<std::mutex> lock(processMutex);
             finishedProcesses[current.name] = current;
         }
+
+        coreActiveGlobal[coreId] = false;
     }
+
+    setCoreActive(coreId, false);
+}
+
+std::vector<bool> coreActiveGlobal;
+
+void initializeCoreTracking(int numCores) {
+    coreActiveGlobal.assign(numCores, false); // Start with all cores idle
+}
+
+void setCoreActive(int coreId, bool active) {
+    if (coreId >= 0 && coreId < static_cast<int>(coreActiveGlobal.size())) {
+        coreActiveGlobal[coreId] = active;
+    }
+}
+
+void reportCPUUtilization() {
+    int used = 0;
+    for (bool active : coreActiveGlobal) {
+        if (active) ++used;
+    }
+
+    int total = static_cast<int>(coreActiveGlobal.size());
+    int percent = total == 0 ? 0 : (used * 100) / total;
+    int available = total - used;
+
+    std::cout << "CPU Utilization: " << percent << "%" << std::endl;
+    std::cout << "Cores used: " << used << std::endl;
+    std::cout << "Cores available: " << available << std::endl;
 }

@@ -8,6 +8,18 @@
 #include <mutex>
 #include <chrono>
 
+// Global vector for tracking active status of each core
+extern std::vector<bool> coreActiveGlobal;
+
+// Initialization function (called once in Scheduler constructor)
+void initializeCoreTracking(int numCores);
+
+// Set core active (true = busy, false = free)
+void setCoreActive(int coreId, bool active);
+
+// Print CPU utilization report to stdout
+void reportCPUUtilization();
+
 //Struct for the Process to show up will probably add more later on to show completion of instructions
 struct ProcessScreen {
     std::string name;
@@ -40,34 +52,35 @@ struct ProcessScreen {
 };
 
 class Scheduler {
+public:
+    Scheduler(int cores,
+        std::map<std::string, ProcessScreen>& running,
+        std::map<std::string, ProcessScreen>& finished,
+        std::mutex& pm);
+
+    void addProcess(const ProcessScreen& process);
+
+    void runSchedulerFCFS();
+    void runSchedulerRR(int quantum);
+
 private:
+    void coreWorkerFCFS(int coreId);
+    void coreWorkerRR(int coreId, int quantum);
+
     int numCores;
-
     std::queue<ProcessScreen> readyQueue;
-    std::mutex queueMutex;
-    std::condition_variable queueCV;
-
-    std::mutex ioMutex;
-    std::mutex& processMutex;
 
     std::map<std::string, ProcessScreen>& runningProcesses;
     std::map<std::string, ProcessScreen>& finishedProcesses;
 
-    std::atomic<int> rrIndex = 0;  // global round index for deterministic RR
+    std::mutex& processMutex;
 
-    void coreWorkerFCFS(int coreId);
-    void coreWorkerRR(int coreId, int quantum);
+    std::mutex queueMutex;
+    std::condition_variable queueCV;
 
-public:
-    Scheduler(int cores,
-              std::map<std::string, ProcessScreen>& running,
-              std::map<std::string, ProcessScreen>& finished,
-              std::mutex& pm);
-
-    void addProcess(const ProcessScreen& process);
-    void runSchedulerFCFS();
-    void runSchedulerRR(int quantum);
+    int rrIndex = 0;  // For round-robin scheduling
 };
+
 
 // Other utils
 std::string getCurrentTimestamp();

@@ -1,2 +1,4 @@
-﻿  main.cpp
-  OS_Emulator.vcxproj -> C:\Users\Bea\Documents\Github Local\OS_Emulator\OS_Emulator\x64\Debug\OS_Emulator.exe
+﻿  console_manager.cpp
+C:\Users\barry\Desktop\Documents\GitHub\OS_Emulator\OS_Emulator\OS_Emulator\console_manager.cpp(281,23): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\barry\Desktop\Documents\GitHub\OS_Emulator\OS_Emulator\OS_Emulator\console_manager.cpp(373,71): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+  OS_Emulator.vcxproj -> C:\Users\barry\Desktop\Documents\GitHub\OS_Emulator\OS_Emulator\x64\Debug\OS_Emulator.exe

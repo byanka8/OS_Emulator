@@ -398,9 +398,11 @@ void handleScreenCommand(const char* input, std::map<std::string, ProcessScreen>
     }
     else if (stringCount == 2) { // If screen -ls is entered
         if (strcmp(flag, "-ls") == 0) {
-            printf("CPU Utilization: 100%\n");  // This will be moved to cpu_manager
-            printf("Cores used: 4\n");
-            printf("Cores available: 0\n");
+            //printf("CPU Utilization: 100%\n");  // This will be moved to cpu_manager
+            //printf("Cores used: 4\n");
+            //printf("Cores available: 0\n");
+
+            reportCPUUtilization();
 
             printProcessStatus(runningProcesses, finishedProcesses, processMutex);
         }
