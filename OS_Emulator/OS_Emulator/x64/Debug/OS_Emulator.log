@@ -1,2 +1,9 @@
 ﻿  main.cpp
-  OS_Emulator.vcxproj -> C:\Users\barry\source\repos\OS_Emulator - Copy\x64\Debug\OS_Emulator.exe
+  console_manager.cpp
+C:\Users\barry\source\repos\temp\OS_Emulator - Copy\OS_Emulator\console_manager.cpp(281,23): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\barry\source\repos\temp\OS_Emulator - Copy\OS_Emulator\console_manager.cpp(373,71): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\barry\source\repos\temp\OS_Emulator - Copy\OS_Emulator\console_manager.cpp(393,20): warning C4778: 'printf' : unterminated format string '%\n'
+  process_manager.cpp
+  scheduler.cpp
+  Generating Code...
+  OS_Emulator.vcxproj -> C:\Users\barry\source\repos\temp\OS_Emulator - Copy\x64\Debug\OS_Emulator.exe

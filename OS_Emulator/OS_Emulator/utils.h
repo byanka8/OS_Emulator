@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <map>
 #include <string>
 #include <vector>
@@ -53,14 +53,16 @@ private:
     std::map<std::string, ProcessScreen>& runningProcesses;
     std::map<std::string, ProcessScreen>& finishedProcesses;
 
+    std::atomic<int> rrIndex = 0;  // global round index for deterministic RR
+
     void coreWorkerFCFS(int coreId);
     void coreWorkerRR(int coreId, int quantum);
 
 public:
     Scheduler(int cores,
-        std::map<std::string, ProcessScreen>& running,
-        std::map<std::string, ProcessScreen>& finished,
-        std::mutex& pm);
+              std::map<std::string, ProcessScreen>& running,
+              std::map<std::string, ProcessScreen>& finished,
+              std::mutex& pm);
 
     void addProcess(const ProcessScreen& process);
     void runSchedulerFCFS();
