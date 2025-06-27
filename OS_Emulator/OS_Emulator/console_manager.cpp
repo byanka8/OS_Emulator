@@ -361,22 +361,30 @@ void printProcessStatus(
     std::cout << "-------------------------------\n";
 }
 
-void handleScreenCommand(const char* input, std::map<std::string, ProcessScreen> &processScreens, int maxIns, const std::map<std::string, ProcessScreen>& runningProcesses,
-    const std::map<std::string, ProcessScreen>& finishedProcesses, std::mutex& processMutex) {
+void handleScreenCommand(const char* input, std::map<std::string, ProcessScreen> &processScreens, int maxIns, std::map<std::string, ProcessScreen>& runningProcesses,
+    std::map<std::string, ProcessScreen>& finishedProcesses, std::mutex& processMutex) {
     char cmd[20] = { 0 }, flag[6] = { 0 }, name[51] = { 0 };
 
     int stringCount = sscanf_s(input, "%s %s %s", cmd, (unsigned)_countof(cmd), flag, (unsigned)_countof(flag), name, (unsigned)_countof(name));
 
     if (stringCount == 3) {
         if (strcmp(flag, "-s") == 0) {
-            std::string timestamp = getCurrentTimestamp();
+            //std::string timestamp = getCurrentTimestamp();
             ProcessScreen ps = createProcess(name, processScreens.size(), maxIns);
             processScreens[name] = ps;
             drawProcessScreen(ps);
             processScreenLoop(name);
         }
         else if (strcmp(flag, "-r") == 0) {
-            if (processScreens.count(name)) {
+            if (runningProcesses.count(name)) {
+                drawProcessScreen(runningProcesses[name]);
+                processScreenLoop(name);
+            }
+            else if (finishedProcesses.count(name)) {
+                drawProcessScreen(finishedProcesses[name]);
+                processScreenLoop(name);
+            }
+            else if (processScreens.count(name)) {
                 drawProcessScreen(processScreens[name]);
                 processScreenLoop(name);
             }

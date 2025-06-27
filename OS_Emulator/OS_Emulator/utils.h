@@ -100,8 +100,8 @@ void printCenteredGreeting(const char* message);
 void startUp();		//Full opening page :D
 
 void clearScreen();
-void handleScreenCommand(const char* input, std::map<std::string, ProcessScreen>& processScreens, int maxIns, const std::map<std::string, ProcessScreen>& runningProcesses,
-    const std::map<std::string, ProcessScreen>& finishedProcesses, std::mutex& processMutex);
+void handleScreenCommand(const char* input, std::map<std::string, ProcessScreen>& processScreens, int maxIns, std::map<std::string, ProcessScreen>& runningProcesses,
+     std::map<std::string, ProcessScreen>& finishedProcesses, std::mutex& processMutex);
 
 // Process functions
 

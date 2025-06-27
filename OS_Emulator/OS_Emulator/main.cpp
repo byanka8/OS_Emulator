@@ -125,17 +125,19 @@ int main() {
         else if (strcmp(command, "scheduler-start") == 0) {
             printf("scheduler-test command recognized. Doing something.\n");
             // test scheduler
-            processScreens.emplace("p1", ProcessScreen{ "p1", 1, 100 });
-            processScreens.emplace("p2", ProcessScreen{ "p2", 2, 100 });
-            processScreens.emplace("p3", ProcessScreen{ "p3", 3, 100 });
+            processScreens.emplace("p1", createProcess("p1", 1, 100));
+            processScreens.emplace("p2", createProcess("p2", 2, 100));
+            processScreens.emplace("p3", createProcess("p3", 3, 100));
 
-            processScreens.emplace("p4", ProcessScreen{ "p4", 4, 100 });
-            processScreens.emplace("p5", ProcessScreen{ "p5", 5, 100 });
-            processScreens.emplace("p6", ProcessScreen{ "p6", 6, 100 });
+            processScreens.emplace("p4", createProcess("p4", 4, 100));
+            processScreens.emplace("p5", createProcess("p5", 5, 100));
+            processScreens.emplace("p6", createProcess("p6", 6, 100));
 
-            processScreens.emplace("p7", ProcessScreen{ "p7", 7, 100});
-            processScreens.emplace("p8", ProcessScreen{ "p8", 8, 100});
-            processScreens.emplace("p9", ProcessScreen{ "p9", 9, 100});
+            processScreens.emplace("p7", createProcess("p7", 7, 100));
+            processScreens.emplace("p8", createProcess("p8", 8, 100));
+            processScreens.emplace("p9", createProcess("p9", 9, 100));
+        
+
             Scheduler scheduler(numCpu, runningProcesses, finishedProcesses, processMutex);
 
             /*for (const auto& process : processScreens) {
