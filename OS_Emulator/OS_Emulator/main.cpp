@@ -122,7 +122,7 @@ void checkCPUTicks(int batchSize, Scheduler& scheduler) {
         if (cpuTick % batchFreq == 0) {
             generateProcess(batchSize, scheduler);
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(30));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
 
