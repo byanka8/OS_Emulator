@@ -53,7 +53,7 @@ struct ProcessScreen {
 
     void executeInstruction() {
         if (getRemainingInstructions() > 0) {
-            print("Hello world from " + name + " \\! \\n");
+            print("Hello world from " + name + " !");
             currentInstructions++;
         }
     }
@@ -135,7 +135,7 @@ void handleScreenCommand(const char* input, std::map<std::string, ProcessScreen>
 // Process functions
 
 void drawProcessScreen(const ProcessScreen& ps);
-void processScreenLoop(const std::string& name);
+void processScreenLoop(const std::string& name, std::map<std::string, ProcessScreen>& processScreens);
 std::string getProcessStatus(
     const std::map<std::string, ProcessScreen>& runningProcesses,
     const std::map<std::string, ProcessScreen>& finishedProcesses,

@@ -107,7 +107,7 @@ void handleCommand(bool initialized) {
 
 void generateProcess(int batchSize, Scheduler& scheduler) {
     for (int i = 0; i < batchSize; ++i) {
-        std::string name = "p" + std::to_string(nextProcessId);
+        std::string name = "process" + std::to_string(nextProcessId);
         int totalInstructions = randomBetween(minIns, maxIns);
         ProcessScreen ps = createProcess(name, nextProcessId, totalInstructions);
         processScreens[name] = ps;

@@ -15,9 +15,11 @@ void drawProcessScreen(const ProcessScreen& ps) {
     printf("   Created: %s\n", ps.timestamp.c_str());
     printf("=================================================\n");
     printf("Type 'exit' to return to the main menu.\n");
+
+    std::cout << ps.msg->str() << std::endl;
 }
 
-void processScreenLoop(const std::string& name) {
+void processScreenLoop(const std::string& name, std::map<std::string, ProcessScreen>& processScreens) {
     char input[100];
     while (true) {
         printf("\n(screen:%s) > ", name.c_str());
@@ -29,6 +31,9 @@ void processScreenLoop(const std::string& name) {
             clearScreen();
             startUp();
             break;
+        }
+        if (strcmp(input, "process-smi") == 0) {
+            drawProcessScreen(processScreens[name]);
         }
         else {
             printf("Unknown command. Type 'exit' to return to the main menu.\n");

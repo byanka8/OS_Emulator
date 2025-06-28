@@ -407,20 +407,20 @@ void handleScreenCommand(const char* input, std::map<std::string, ProcessScreen>
             ProcessScreen ps = createProcess(name, processScreens.size(), maxIns);
             processScreens[name] = ps;
             drawProcessScreen(ps);
-            processScreenLoop(name);
+            processScreenLoop(name, processScreens);
         }
         else if (strcmp(flag, "-r") == 0) {
             if (runningProcesses.count(name)) {
                 drawProcessScreen(runningProcesses[name]);
-                processScreenLoop(name);
+                processScreenLoop(name, runningProcesses);
             }
             else if (finishedProcesses.count(name)) {
                 drawProcessScreen(finishedProcesses[name]);
-                processScreenLoop(name);
+                processScreenLoop(name, finishedProcesses);
             }
             else if (processScreens.count(name)) {
                 drawProcessScreen(processScreens[name]);
-                processScreenLoop(name);
+                processScreenLoop(name, processScreens);
             }
             else {
                 printf("No screen found with name '%s'.\n", name);

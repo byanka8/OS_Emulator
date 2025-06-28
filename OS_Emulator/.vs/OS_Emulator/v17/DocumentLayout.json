@@ -7,16 +7,16 @@
       "RelativeMoniker": "D:0:0:{9950D712-2D55-4C5F-9C49-747C56177F99}|OS_Emulator\\OS_Emulator.vcxproj|solutionrelative:OS_Emulator\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{9950D712-2D55-4C5F-9C49-747C56177F99}|OS_Emulator\\OS_Emulator.vcxproj|C:\\Users\\barry\\source\\repos\\temp\\OS_Emulator\\OS_Emulator\\utils.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{9950D712-2D55-4C5F-9C49-747C56177F99}|OS_Emulator\\OS_Emulator.vcxproj|solutionrelative:OS_Emulator\\utils.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{9950D712-2D55-4C5F-9C49-747C56177F99}|OS_Emulator\\OS_Emulator.vcxproj|C:\\Users\\barry\\source\\repos\\temp\\OS_Emulator\\OS_Emulator\\scheduler.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{9950D712-2D55-4C5F-9C49-747C56177F99}|OS_Emulator\\OS_Emulator.vcxproj|solutionrelative:OS_Emulator\\scheduler.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{9950D712-2D55-4C5F-9C49-747C56177F99}|OS_Emulator\\OS_Emulator.vcxproj|C:\\Users\\barry\\source\\repos\\temp\\OS_Emulator\\OS_Emulator\\console_manager.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{9950D712-2D55-4C5F-9C49-747C56177F99}|OS_Emulator\\OS_Emulator.vcxproj|solutionrelative:OS_Emulator\\console_manager.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9950D712-2D55-4C5F-9C49-747C56177F99}|OS_Emulator\\OS_Emulator.vcxproj|C:\\Users\\barry\\source\\repos\\temp\\OS_Emulator\\OS_Emulator\\utils.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{9950D712-2D55-4C5F-9C49-747C56177F99}|OS_Emulator\\OS_Emulator.vcxproj|solutionrelative:OS_Emulator\\utils.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{9950D712-2D55-4C5F-9C49-747C56177F99}|OS_Emulator\\OS_Emulator.vcxproj|C:\\Users\\barry\\source\\repos\\temp\\OS_Emulator\\OS_Emulator\\process_manager.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
@@ -52,46 +52,46 @@
               "RelativeDocumentMoniker": "OS_Emulator\\process_manager.cpp",
               "ToolTip": "C:\\Users\\barry\\source\\repos\\temp\\OS_Emulator\\OS_Emulator\\process_manager.cpp",
               "RelativeToolTip": "OS_Emulator\\process_manager.cpp",
-              "ViewState": "AgIAABsAAAAAAAAAAAAAACoAAAAPAAAAAAAAAA==",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAABIAAAAsAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-06-28T04:06:55.27Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "scheduler.cpp",
               "DocumentMoniker": "C:\\Users\\barry\\source\\repos\\temp\\OS_Emulator\\OS_Emulator\\scheduler.cpp",
               "RelativeDocumentMoniker": "OS_Emulator\\scheduler.cpp",
               "ToolTip": "C:\\Users\\barry\\source\\repos\\temp\\OS_Emulator\\OS_Emulator\\scheduler.cpp",
               "RelativeToolTip": "OS_Emulator\\scheduler.cpp",
-              "ViewState": "AgIAACEAAAAAAAAAAAAAACwAAAAFAAAAAAAAAA==",
+              "ViewState": "AgIAAEgAAAAAAAAAAAAAACwAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-06-25T03:15:14.313Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 1,
               "Title": "utils.h",
               "DocumentMoniker": "C:\\Users\\barry\\source\\repos\\temp\\OS_Emulator\\OS_Emulator\\utils.h",
               "RelativeDocumentMoniker": "OS_Emulator\\utils.h",
               "ToolTip": "C:\\Users\\barry\\source\\repos\\temp\\OS_Emulator\\OS_Emulator\\utils.h",
               "RelativeToolTip": "OS_Emulator\\utils.h",
-              "ViewState": "AgIAACsAAAAAAAAAAAAAADcAAAA7AAAAAAAAAA==",
+              "ViewState": "AgIAACEAAAAAAAAAAAAAADcAAAAyAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-06-25T00:31:11.829Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "console_manager.cpp",
               "DocumentMoniker": "C:\\Users\\barry\\source\\repos\\temp\\OS_Emulator\\OS_Emulator\\console_manager.cpp",
               "RelativeDocumentMoniker": "OS_Emulator\\console_manager.cpp",
               "ToolTip": "C:\\Users\\barry\\source\\repos\\temp\\OS_Emulator\\OS_Emulator\\console_manager.cpp",
               "RelativeToolTip": "OS_Emulator\\console_manager.cpp",
-              "ViewState": "AgIAAGoBAAAAAAAAAAAuwHIBAAAJAAAAAAAAAA==",
+              "ViewState": "AgIAAJcBAAAAAAAAAAAuwJ4BAAA4AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-06-25T01:27:05.932Z",
               "EditorCaption": ""
@@ -106,8 +106,7 @@
               "RelativeToolTip": "OS_Emulator\\utils.cpp",
               "ViewState": "AgIAAFkAAAAAAAAAAAAAAGAAAAA6AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-06-25T01:23:24.51Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-25T01:23:24.51Z"
             },
             {
               "$type": "Document",
@@ -119,8 +118,7 @@
               "RelativeToolTip": "OS_Emulator\\config.txt",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAARAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
-              "WhenOpened": "2025-06-25T02:55:29.8Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-25T02:55:29.8Z"
             },
             {
               "$type": "Document",
@@ -130,7 +128,7 @@
               "RelativeDocumentMoniker": "OS_Emulator\\main.cpp",
               "ToolTip": "C:\\Users\\barry\\source\\repos\\temp\\OS_Emulator\\OS_Emulator\\main.cpp",
               "RelativeToolTip": "OS_Emulator\\main.cpp",
-              "ViewState": "AgIAACQAAAAAAAAAAAAewDIAAAAoAAAAAAAAAA==",
+              "ViewState": "AgIAAFkAAAAAAAAAAAAAAG0AAAAjAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-06-25T00:20:23.818Z",
               "EditorCaption": ""
