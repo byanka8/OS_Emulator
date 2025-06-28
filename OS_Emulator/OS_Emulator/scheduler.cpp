@@ -79,7 +79,7 @@ void Scheduler::coreWorkerFCFS(int coreId) {
                 std::lock_guard<std::mutex> lock(processMutex);
                 runningProcesses[current.name] = current;
             }
-            //std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
 
         current.endTime = getCurrentTimestamp();
@@ -134,7 +134,7 @@ void Scheduler::coreWorkerRR(int coreId, int quantum) {
         int instructionsRun = 0;
         while (!current.hasFinished() && instructionsRun < quantum) {
             current.executeInstruction();
-            //std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
             ++instructionsRun;
 
             {

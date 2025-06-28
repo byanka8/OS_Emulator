@@ -31,8 +31,6 @@ std::thread schedulerThread;
 std::thread cpuTickThread;
 std::thread handleCmdThread;
 
-// === HANDLERS ===
-
 void handleCommand(bool initialized) {
     char command[100];
 
@@ -41,10 +39,30 @@ void handleCommand(bool initialized) {
         fgets(command, sizeof(command), stdin);
         command[strcspn(command, "\n")] = 0;
 
+        // Lowercase for command parsing
         for (int i = 0; command[i]; i++) command[i] = tolower(command[i]);
 
         if (strncmp(command, "screen", 6) == 0) {
             handleScreenCommand(command, processScreens, maxIns, runningProcesses, finishedProcesses, processMutex);
+        }
+        else if (strcmp(command, "scheduler-start") == 0) {
+            printf("scheduler-start command recognized. Starting scheduling system.\n");
+
+            schedulerPtr = new Scheduler(numCpu, runningProcesses, finishedProcesses, processMutex);
+            generateProcess(1, *schedulerPtr);  // Initial process batch
+            batch_scheduler_enabled = true;
+
+            cpuTickThread = std::thread(checkCPUTicks, 1, std::ref(*schedulerPtr));
+
+            if (schedulerType == "fcfs") {
+                schedulerThread = std::thread(&Scheduler::runSchedulerFCFS, schedulerPtr);
+            }
+            else if (schedulerType == "rr") {
+                schedulerThread = std::thread(&Scheduler::runSchedulerRR, schedulerPtr, quantumCycles);
+            }
+            else {
+                printf("Invalid scheduler type.\n");
+            }
         }
         else if (strcmp(command, "scheduler-stop") == 0) {
             printf("scheduler-stop command recognized. Stopping batch generation only.\n");
@@ -72,13 +90,11 @@ void handleCommand(bool initialized) {
         else if (strcmp(command, "exit") == 0) {
             printf("EXIT command recognized. Terminating application.\n");
 
-            // Stop creating new processes
             batch_scheduler_enabled = false;
 
-            // Inform the scheduler that no more processes will ever come
             if (schedulerPtr) {
                 schedulerPtr->noMoreProcesses = true;
-                schedulerPtr->queueCV.notify_all(); // Wake up the scheduler if it’s waiting
+                schedulerPtr->queueCV.notify_all();
             }
 
             break;
@@ -125,6 +141,7 @@ int main() {
 
         if (strcmp(command, "initialize") == 0) {
             initialized = true;
+
             readConfig("config.txt", numCpu, schedulerType, quantumCycles, batchFreq, minIns, maxIns, delay);
             std::cout << "CPU: " << numCpu << "\n"
                 << "Scheduler: " << schedulerType << "\n"
@@ -133,8 +150,16 @@ int main() {
                 << "Min Ins: " << minIns << "\n"
                 << "Max Ins: " << maxIns << "\n"
                 << "Delay: " << delay << "\n";
+
             initializeCoreTracking(numCpu);
             printf("INITIALIZE command recognized. Initializing System.\n");
+
+            // Start command handler immediately after initialization
+            handleCmdThread = std::thread([&]() {
+                handleCommand(initialized);
+                });
+
+            break;
         }
         else if (strcmp(command, "exit") == 0) {
             printf("EXIT command recognized. Terminating application.\n");
@@ -150,43 +175,7 @@ int main() {
         }
     }
 
-    while (initialized) {
-        printf("\n> ");
-        fgets(command, sizeof(command), stdin);
-        command[strcspn(command, "\n")] = 0;
-        for (int i = 0; command[i]; i++) command[i] = tolower(command[i]);
-
-        if (strcmp(command, "scheduler-start") == 0) {
-            printf("scheduler-start command recognized. Starting scheduling system.\n");
-
-            schedulerPtr = new Scheduler(numCpu, runningProcesses, finishedProcesses, processMutex);
-
-            generateProcess(1, *schedulerPtr);
-            batch_scheduler_enabled = true;
-
-            cpuTickThread = std::thread(checkCPUTicks, 1, std::ref(*schedulerPtr));
-
-            if (schedulerType == "fcfs") {
-                schedulerThread = std::thread(&Scheduler::runSchedulerFCFS, schedulerPtr);
-            }
-            else if (schedulerType == "rr") {
-                schedulerThread = std::thread(&Scheduler::runSchedulerRR, schedulerPtr, quantumCycles);
-            }
-            else {
-                printf("Invalid scheduler type.\n");
-            }
-
-            handleCmdThread = std::thread([&]() {
-                handleCommand(initialized);
-                });
-
-            break; // leave the main loop — everything handled in threads now
-        }
-        else {
-            printf("Invalid command. Type 'scheduler-start' to begin or 'exit' to quit.\n");
-        }
-    }
-
+    // Wait for threads before exiting
     if (schedulerThread.joinable()) schedulerThread.join();
     if (handleCmdThread.joinable()) handleCmdThread.join();
     if (cpuTickThread.joinable()) cpuTickThread.join();
