@@ -7,6 +7,11 @@
 #include <thread>
 #include <mutex>
 #include <chrono>
+#include <atomic>
+
+extern std::atomic<int> cpuTick;
+extern std::atomic<bool> batch_scheduler_enabled;
+extern std::atomic<bool> stop_all_threads;
 
 // Global vector for tracking active status of each core
 extern std::vector<bool> coreActiveGlobal;
@@ -47,40 +52,38 @@ struct ProcessScreen {
         }
         else {
             //std::cout << "Process " << id << ": " << name << " has already finished.\n";
+            /*cpuTick++;*/
         }
     }
 };
 
 class Scheduler {
 public:
-    Scheduler(int cores,
+    Scheduler(int cpuCount,
         std::map<std::string, ProcessScreen>& running,
         std::map<std::string, ProcessScreen>& finished,
-        std::mutex& pm);
+        std::mutex& mutex);
 
-    void addProcess(const ProcessScreen& process);
-
+    void addProcess(ProcessScreen& process);
     void runSchedulerFCFS();
     void runSchedulerRR(int quantum);
 
+    std::condition_variable queueCV;
+    std::mutex queueMutex;
+    std::atomic<bool> noMoreProcesses = false;
+
 private:
-    void coreWorkerFCFS(int coreId);
-    void coreWorkerRR(int coreId, int quantum);
-
     int numCores;
-    std::queue<ProcessScreen> readyQueue;
+    int rrIndex = 0;
 
+    std::queue<ProcessScreen> readyQueue;
     std::map<std::string, ProcessScreen>& runningProcesses;
     std::map<std::string, ProcessScreen>& finishedProcesses;
-
     std::mutex& processMutex;
 
-    std::mutex queueMutex;
-    std::condition_variable queueCV;
-
-    int rrIndex = 0;  // For round-robin scheduling
+    void coreWorkerFCFS(int coreId);
+    void coreWorkerRR(int coreId, int quantum);
 };
-
 
 // Other utils
 std::string getCurrentTimestamp();
@@ -95,6 +98,7 @@ void readConfig(const std::string& filename,
     int& minIns,
     int& maxIns,
     int& delayPerExec);
+int randomBetween(int min, int max);
 
 // Console start page functions
 void printMenuTopBorder();
@@ -130,3 +134,6 @@ std::string getProcessStatus(
     std::mutex& processMutex
 );
 ProcessScreen createProcess(std::string name, int id, int totalInstructions);
+
+void generateProcess(int batchSize, Scheduler& scheduler);
+void checkCPUTicks(int batchSize, Scheduler& scheduler);

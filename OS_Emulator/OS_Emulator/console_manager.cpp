@@ -4,6 +4,7 @@
 #include <mutex>
 #include <map>
 #include <sstream>
+#include <algorithm>
 
 
 void printMenuTopBorder() {
@@ -333,33 +334,40 @@ std::string getProcessStatus(
     const std::map<std::string, ProcessScreen>& processScreens,
     std::mutex& processMutex
 ) {
-    /*std::lock_guard<std::mutex> lock(processMutex);*/
-
     std::ostringstream oss;
-    if (runningProcesses.size() > 0 || finishedProcesses.size() > 0) {
+
+    if (!runningProcesses.empty() || !finishedProcesses.empty()) {
         oss << "-------------------------------\n";
         oss << "Running processes:\n";
 
-        for (const auto& pair : runningProcesses) {
-            const std::string& processName = pair.first;
-            const ProcessScreen& proc = pair.second;
-            oss << processName
+        // Sort running by startTime
+        std::vector<ProcessScreen> runningSorted;
+        for (const auto& pair : runningProcesses) runningSorted.push_back(pair.second);
+        std::sort(runningSorted.begin(), runningSorted.end(), [](const ProcessScreen& a, const ProcessScreen& b) {
+            return a.startTime < b.startTime;
+            });
+
+        for (const auto& proc : runningSorted) {
+            oss << proc.name
                 << " (" << proc.startTime << ")"
                 << "  Core: " << proc.coreAssigned
-                << "  [ " << proc.currentInstructions << " / " << proc.totalInstructions << " ]"
-                << std::endl;
+                << "  [ " << proc.currentInstructions << " / " << proc.totalInstructions << " ]\n";
         }
 
         oss << "\nFinished processes:\n";
 
-        for (const auto& pair : finishedProcesses) {
-            const std::string& processName = pair.first;
-            const ProcessScreen& proc = pair.second;
-            oss << processName
+        // Sort finished by endTime
+        std::vector<ProcessScreen> finishedSorted;
+        for (const auto& pair : finishedProcesses) finishedSorted.push_back(pair.second);
+        std::sort(finishedSorted.begin(), finishedSorted.end(), [](const ProcessScreen& a, const ProcessScreen& b) {
+            return a.endTime < b.endTime;
+            });
+
+        for (const auto& proc : finishedSorted) {
+            oss << proc.name
                 << " (" << proc.endTime << ")"
                 << "  Finished  "
-                << "  [ " << proc.currentInstructions << " / " << proc.totalInstructions << " ]"
-                << std::endl;
+                << "  [ " << proc.currentInstructions << " / " << proc.totalInstructions << " ]\n";
         }
 
         oss << "-------------------------------\n";
@@ -367,21 +375,25 @@ std::string getProcessStatus(
     else {
         oss << "\nCreated processes:\n";
 
-        for (const auto& pair : processScreens) {
-            const std::string& processName = pair.first;
-            const ProcessScreen& proc = pair.second;
-            oss << processName
+        // Sort created processes by timestamp
+        std::vector<ProcessScreen> createdSorted;
+        for (const auto& pair : processScreens) createdSorted.push_back(pair.second);
+        std::sort(createdSorted.begin(), createdSorted.end(), [](const ProcessScreen& a, const ProcessScreen& b) {
+            return a.timestamp < b.timestamp;
+            });
+
+        for (const auto& proc : createdSorted) {
+            oss << proc.name
                 << " (" << proc.timestamp << ")"
-                << "  [ " << proc.currentInstructions << " / " << proc.totalInstructions << " ]"
-                << std::endl;
+                << "  [ " << proc.currentInstructions << " / " << proc.totalInstructions << " ]\n";
         }
 
         oss << "-------------------------------\n";
     }
-    
 
     return oss.str();
 }
+
 
 void handleScreenCommand(const char* input, std::map<std::string, ProcessScreen> &processScreens, int maxIns, std::map<std::string, ProcessScreen>& runningProcesses,
     std::map<std::string, ProcessScreen>& finishedProcesses, std::mutex& processMutex) {

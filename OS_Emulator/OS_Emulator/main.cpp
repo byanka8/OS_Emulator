@@ -1,28 +1,39 @@
-﻿// Console design/layout : Groupwork made for week 3
-// Version 1.1 of Console design/layout?
-// it does what is expected when input is  "screen -s test" the screen test and clearing
-#include <iostream>
+﻿#include <iostream>
 #include <string>
-#include <algorithm> // for std::transform
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
-#include <ctime> //gets time
-#include <map> // 
+#include <ctime>
+#include <map>
 #include <thread>
+#include <atomic>
+#include <mutex>
 
-// import header file
 #include "utils.h"
 
-// variables
+// Globals
 std::map<std::string, ProcessScreen> processScreens;
 std::map<std::string, ProcessScreen> runningProcesses;
 std::map<std::string, ProcessScreen> finishedProcesses;
+
 int numCpu, quantumCycles, batchFreq, minIns, maxIns, delay;
 std::string schedulerType;
+
 std::mutex processMutex;
+int nextProcessId = 1;
+
+std::atomic<int> cpuTick(0);
+std::atomic<bool> batch_scheduler_enabled(false);
+
+// Threads
+Scheduler* schedulerPtr = nullptr;
+std::thread schedulerThread;
+std::thread cpuTickThread;
+std::thread handleCmdThread;
+
+// === HANDLERS ===
 
 void handleCommand(bool initialized) {
-
     char command[100];
 
     while (initialized) {
@@ -30,34 +41,28 @@ void handleCommand(bool initialized) {
         fgets(command, sizeof(command), stdin);
         command[strcspn(command, "\n")] = 0;
 
-        //lower case converter
         for (int i = 0; command[i]; i++) command[i] = tolower(command[i]);
-        // i forget if i typed it already lol
-        if (runningProcesses.size() == 0) {
-            break;
-        }
-        else if (strncmp(command, "screen", 6) == 0) { //this reads if there is more than just screen
 
+        if (strncmp(command, "screen", 6) == 0) {
             handleScreenCommand(command, processScreens, maxIns, runningProcesses, finishedProcesses, processMutex);
         }
-        else if (strcmp(command, "scheduler-start") == 0) {
-            printf("scheduler-test command recognized. Doing something.\n");
-        }
         else if (strcmp(command, "scheduler-stop") == 0) {
-            printf("scheduler-stop command recognized. Doing something.\n");
+            printf("scheduler-stop command recognized. Stopping batch generation only.\n");
+            batch_scheduler_enabled = false;
+
+            if (schedulerPtr) {
+                schedulerPtr->noMoreProcesses = true;
+                schedulerPtr->queueCV.notify_all();
+            }
         }
         else if (strcmp(command, "report-util") == 0) {
-            printf("report-util command recognized. Doing something.\n");
+            printf("report-util command recognized. Generating report.\n");
             std::string report = getProcessReport();
 
             if (report.empty()) {
-                // fallback if report was never captured
                 report = getCPUUtilization() + getProcessStatus(runningProcesses, finishedProcesses, processScreens, processMutex);
-                saveToFile(report);
             }
-            else {
-                saveToFile(report);
-            }
+            saveToFile(report);
         }
         else if (strcmp(command, "clear") == 0) {
             printf("clear command recognized. Reprinting screen...\n");
@@ -66,6 +71,16 @@ void handleCommand(bool initialized) {
         }
         else if (strcmp(command, "exit") == 0) {
             printf("EXIT command recognized. Terminating application.\n");
+
+            // Stop creating new processes
+            batch_scheduler_enabled = false;
+
+            // Inform the scheduler that no more processes will ever come
+            if (schedulerPtr) {
+                schedulerPtr->noMoreProcesses = true;
+                schedulerPtr->queueCV.notify_all(); // Wake up the scheduler if it’s waiting
+            }
+
             break;
         }
         else {
@@ -74,13 +89,30 @@ void handleCommand(bool initialized) {
     }
 }
 
+void generateProcess(int batchSize, Scheduler& scheduler) {
+    for (int i = 0; i < batchSize; ++i) {
+        std::string name = "p" + std::to_string(nextProcessId);
+        int totalInstructions = randomBetween(minIns, maxIns);
+        ProcessScreen ps = createProcess(name, nextProcessId, totalInstructions);
+        nextProcessId++;
+        scheduler.addProcess(ps);
+    }
+}
+
+void checkCPUTicks(int batchSize, Scheduler& scheduler) {
+    while (batch_scheduler_enabled) {
+        cpuTick++;
+        if (cpuTick % batchFreq == 0) {
+            generateProcess(batchSize, scheduler);
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(30));
+    }
+}
 
 int main() {
-
     std::srand(static_cast<unsigned>(std::time(0)));
-    
+
     char command[100];
-    //char prevCommand[100];
     bool initialized = false;
 
     startUp();
@@ -94,16 +126,14 @@ int main() {
         if (strcmp(command, "initialize") == 0) {
             initialized = true;
             readConfig("config.txt", numCpu, schedulerType, quantumCycles, batchFreq, minIns, maxIns, delay);
-            std::cout << "CPU: " << numCpu << "\n";
-            std::cout << "Scheduler: " << schedulerType << "\n";
-            std::cout << "Quantum: " << quantumCycles << "\n";
-            std::cout << "Batch Freq: " << batchFreq << "\n";
-            std::cout << "Min Ins: " << minIns << "\n";
-            std::cout << "Max Ins: " << maxIns << "\n";
-            std::cout << "Delay: " << delay << "\n";
-
-            initializeCoreTracking(numCpu); // Init core usage tracking
-
+            std::cout << "CPU: " << numCpu << "\n"
+                << "Scheduler: " << schedulerType << "\n"
+                << "Quantum: " << quantumCycles << "\n"
+                << "Batch Freq: " << batchFreq << "\n"
+                << "Min Ins: " << minIns << "\n"
+                << "Max Ins: " << maxIns << "\n"
+                << "Delay: " << delay << "\n";
+            initializeCoreTracking(numCpu);
             printf("INITIALIZE command recognized. Initializing System.\n");
         }
         else if (strcmp(command, "exit") == 0) {
@@ -124,110 +154,44 @@ int main() {
         printf("\n> ");
         fgets(command, sizeof(command), stdin);
         command[strcspn(command, "\n")] = 0;
-
-        //lower case converter
         for (int i = 0; command[i]; i++) command[i] = tolower(command[i]);
-        // i forget if i typed it already lol
-        if (strcmp(command, "initialize") == 0 && initialized == true) {
-            printf("Already initialized please continue.\n");
-        }
-        else if (strncmp(command, "screen", 6) == 0) { //this reads if there is more than just screen
 
-            handleScreenCommand(command, processScreens, maxIns, runningProcesses, finishedProcesses, processMutex);
-        }
-        else if (strcmp(command, "scheduler-start") == 0) {
-            printf("scheduler-test command recognized. Doing something.\n");
-            // test scheduler
-            processScreens.emplace("p1", createProcess("p1", 1, 100));
-            processScreens.emplace("p2", createProcess("p2", 2, 100));
-            processScreens.emplace("p3", createProcess("p3", 3, 100));
+        if (strcmp(command, "scheduler-start") == 0) {
+            printf("scheduler-start command recognized. Starting scheduling system.\n");
 
-            processScreens.emplace("p4", createProcess("p4", 4, 100));
-            processScreens.emplace("p5", createProcess("p5", 5, 100));
-            processScreens.emplace("p6", createProcess("p6", 6, 100));
+            schedulerPtr = new Scheduler(numCpu, runningProcesses, finishedProcesses, processMutex);
 
-            processScreens.emplace("p7", createProcess("p7", 7, 100));
-            processScreens.emplace("p8", createProcess("p8", 8, 100));
-            processScreens.emplace("p9", createProcess("p9", 9, 100));
-        
+            generateProcess(1, *schedulerPtr);
+            batch_scheduler_enabled = true;
 
-            Scheduler scheduler(numCpu, runningProcesses, finishedProcesses, processMutex);
-
-            /*for (const auto& process : processScreens) {
-                scheduler.addProcess(process);
-            }*/
-
-            for (const auto& pair : processScreens) {
-                scheduler.addProcess(pair.second);
-            }
-
-            std::thread schedulerThread;
+            cpuTickThread = std::thread(checkCPUTicks, 1, std::ref(*schedulerPtr));
 
             if (schedulerType == "fcfs") {
-                schedulerThread = std::thread(&Scheduler::runSchedulerFCFS, &scheduler);
+                schedulerThread = std::thread(&Scheduler::runSchedulerFCFS, schedulerPtr);
             }
             else if (schedulerType == "rr") {
-                schedulerThread = std::thread(&Scheduler::runSchedulerRR, &scheduler,
-                    quantumCycles);
+                schedulerThread = std::thread(&Scheduler::runSchedulerRR, schedulerPtr, quantumCycles);
             }
             else {
                 printf("Invalid scheduler type.\n");
-
-
             }
 
-            // Optionally, wait for the thread to finish:
-            /*if (schedulerThread.joinable()) {
-                schedulerThread.join();
-            }*/
-            std::thread handleCmdThread(handleCommand, initialized);
+            handleCmdThread = std::thread([&]() {
+                handleCommand(initialized);
+                });
 
-            schedulerThread.join();
-            handleCmdThread.join();
-
-            /*schedulerThread.join();
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));*/
-
-            /*if (schedulerType == "fcfs")
-                scheduler.runSchedulerFCFS();
-            else if (schedulerType == "rr")
-                scheduler.runSchedulerRR(quantumCycles);
-            else
-                printf("Invalid scheduler type.");*/
-
-
-                // end of test scheduler
-        }
-        else if (strcmp(command, "scheduler-stop") == 0) {
-            printf("scheduler-stop command recognized. Doing something.\n");
-        }
-        else if (strcmp(command, "report-util") == 0) {
-            printf("report-util command recognized. Doing something.\n");
-
-            std::string report = getProcessReport();
-
-            if (report.empty()) {
-                // fallback if report was never captured
-                report = getCPUUtilization() + getProcessStatus(runningProcesses, finishedProcesses, processScreens, processMutex);
-                saveToFile(report);
-            }
-            else {
-                saveToFile(report);
-            } 
-        }
-        else if (strcmp(command, "clear") == 0) {
-            printf("clear command recognized. Reprinting screen...\n");
-            clearScreen();
-            startUp();
-        }
-        else if (strcmp(command, "exit") == 0) {
-            printf("EXIT command recognized. Terminating application.\n");
-            break;
+            break; // leave the main loop — everything handled in threads now
         }
         else {
-            printf("Unrecognized command. Try again.\n");
+            printf("Invalid command. Type 'scheduler-start' to begin or 'exit' to quit.\n");
         }
     }
+
+    if (schedulerThread.joinable()) schedulerThread.join();
+    if (handleCmdThread.joinable()) handleCmdThread.join();
+    if (cpuTickThread.joinable()) cpuTickThread.join();
+
+    delete schedulerPtr;
 
     return 0;
 }

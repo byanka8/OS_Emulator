@@ -6,6 +6,7 @@
 #include <sstream>
 #include <iomanip>
 #include <chrono>
+#include <random>
 
 
 std::string getCurrentTimestamp() {
@@ -90,4 +91,12 @@ void readConfig(const std::string& filename,
             iss >> delayPerExec;
         }
     }
+}
+
+int randomBetween(int min, int max) {
+    static std::random_device rd;  // seed for random engine
+    static std::mt19937 gen(rd()); // mersenne twister engine seeded once
+
+    std::uniform_int_distribution<> dist(min, max);
+    return dist(gen);
 }
