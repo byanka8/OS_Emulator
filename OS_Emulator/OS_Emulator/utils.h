@@ -8,6 +8,8 @@
 #include <mutex>
 #include <chrono>
 #include <atomic>
+#include <sstream>
+#include <memory> // for shared_ptr
 
 extern std::atomic<int> cpuTick;
 extern std::atomic<bool> batch_scheduler_enabled;
@@ -25,7 +27,10 @@ void setCoreActive(int coreId, bool active);
 // Print CPU utilization report to stdout
 std::string getCPUUtilization();
 
+extern int delay;
+
 //Struct for the Process to show up will probably add more later on to show completion of instructions
+
 struct ProcessScreen {
     std::string name;
     int id = 0;
@@ -36,6 +41,8 @@ struct ProcessScreen {
     std::string endTime;
     int coreAssigned = 0;
 
+    std::shared_ptr<std::ostringstream> msg = std::make_shared<std::ostringstream>();
+
     int getRemainingInstructions() const {
         return totalInstructions - currentInstructions;
     }
@@ -45,15 +52,17 @@ struct ProcessScreen {
     }
 
     void executeInstruction() {
-        int remainingInstructions = totalInstructions - currentInstructions;
-        if (remainingInstructions > 0) {
-            //std::cout << "Executing instruction for Process " << id << ": " << name << "\n";
+        if (getRemainingInstructions() > 0) {
+            print("Hello world from " + name + " \\! \\n");
             currentInstructions++;
         }
-        else {
-            //std::cout << "Process " << id << ": " << name << " has already finished.\n";
-            /*cpuTick++;*/
+    }
+
+    void print(const std::string& text, int delay = delay) {
+        if (delay > 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(delay));
         }
+        *msg << text << "\n";
     }
 };
 

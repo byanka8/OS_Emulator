@@ -1,2 +1,5 @@
 ﻿  main.cpp
+  process_manager.cpp
+  scheduler.cpp
+  Generating Code...
   OS_Emulator.vcxproj -> C:\Users\barry\source\repos\temp\OS_Emulator\x64\Debug\OS_Emulator.exe

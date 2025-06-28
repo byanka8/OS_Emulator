@@ -110,6 +110,7 @@ void generateProcess(int batchSize, Scheduler& scheduler) {
         std::string name = "p" + std::to_string(nextProcessId);
         int totalInstructions = randomBetween(minIns, maxIns);
         ProcessScreen ps = createProcess(name, nextProcessId, totalInstructions);
+        processScreens[name] = ps;
         nextProcessId++;
         scheduler.addProcess(ps);
     }
